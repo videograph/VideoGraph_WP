@@ -1,6 +1,5 @@
 === Videograph ===
 Contributors: videograph
-Donate link: https://videograph.ai/
 Tags: videos, integration, videograph, videograph.ai
 Requires at least: 5.0
 Tested up to: 6.4
