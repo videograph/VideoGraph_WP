@@ -1,9 +1,46 @@
 <?php
 
+// Settings page
 function vg_settings()
 {
+    // Nonce verification
+    if (isset($_POST['vg_save_settings']) || isset($_POST['vg_reset_settings'])) {
+        if (!isset($_POST['vg_settings_nonce']) || !wp_verify_nonce($_POST['vg_settings_nonce'], 'vg_settings_nonce')) {
+            // Nonce verification failed, do not proceed
+            return;
+        }
+    }
+
+    // Validation function for API keys
+function vg_validate_api_keys($access_token, $secret_key) {
+    // API URL for checking API keys
+    $api_url = 'https://api.videograph.ai/video/services/api/v1/contents';
+
+    // Headers for the API request
+    $headers = array(
+        'Authorization' => 'Basic ' . base64_encode($access_token . ':' . $secret_key),
+        'Content-Type' => 'application/json',
+    );
+
+    // Perform API request to check the validity of API keys
+    $response = wp_remote_get($api_url, array('headers' => $headers));
+
+    if (is_wp_error($response)) {
+        return 'Failed to fetch videos from Videograph AI API.';
+    }
+
+    $response_code = wp_remote_retrieve_response_code($response);
+
+    if ($response_code === 200) {
+        return 'success';
+    } else {
+        return 'Failed to fetch videos from Videograph AI API. Check your API Credentials.';
+    }
+}
+
     // Save settings or reset settings
-    if (isset($_POST['vg_save_settings']) && wp_verify_nonce($_POST['vg_settings_nonce'], 'vg_settings_action')) {
+    if (isset($_POST['vg_save_settings'])) {
+        // Nonce verification passed, continue with saving settings
         // Save settings
         $access_token = sanitize_text_field($_POST['vg_access_token']);
         $secret_key = sanitize_text_field($_POST['vg_secret_key']);
@@ -31,7 +68,7 @@ function vg_settings()
             update_option('vg_access_token', '');
             update_option('vg_secret_key', '');
         }
-    } elseif (isset($_POST['vg_reset_settings']) && wp_verify_nonce($_POST['vg_settings_nonce'], 'vg_settings_action')) {
+    } elseif (isset($_POST['vg_reset_settings'])) {
         // Reset settings
         update_option('vg_access_token', '');
         update_option('vg_secret_key', '');
@@ -50,9 +87,6 @@ function vg_settings()
     // Initially disable the reset button if API keys are not connected
     $reset_button_disabled = empty($access_token) && empty($secret_key) ? 'disabled' : '';
     $connect_button_disabled = !empty($access_token) && !empty($secret_key) ? 'disabled' : '';
-
-    // Nonce field
-    $nonce_field = wp_nonce_field('vg_settings_action', 'vg_settings_nonce');
     ?>
 
     <div class="wrap">
@@ -68,7 +102,7 @@ function vg_settings()
         <div class="livestrea-wrap">
             <div class="settings-form">
                 <form method="post" action="">
-                    <?php echo $nonce_field; ?>
+                    <?php wp_nonce_field('vg_settings_nonce', 'vg_settings_nonce'); ?>
                     <table class="form-table" role="presentation">
                         <tbody>
                             <tr>
@@ -155,6 +189,7 @@ function vg_settings()
 
         });
     </script>
+    
 
 <?php
 }

@@ -22,7 +22,7 @@ function vg_live_stream_videos()
     $access_token = get_option('vg_access_token');
     $secret_key = get_option('vg_secret_key');
     if (empty($access_token) || empty($secret_key)) {
-        echo '<div><p>The API key is missing or invalid. Please go to the <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">settings</a> page and update it with the correct one.</p></div>';
+        echo '<div class="vi-notice-error"><p>The API key is missing or invalid. Please go to the <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">settings</a> page and update it with the correct one.</p></div>';
         return;
     }
     // Fetch Livestream videos
