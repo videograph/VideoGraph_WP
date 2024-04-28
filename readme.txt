@@ -2,7 +2,7 @@
 Contributors: videograph
 Donate link: https://videograph.ai/
 Tags: videos, integration, videograph, videograph.ai
-Requires at least: 4.7
+Requires at least: 5.0
 Tested up to: 6.4
 Stable tag: 6.0
 Requires PHP: 7.0
@@ -85,16 +85,19 @@ Settings Page: This screenshot showcases the settings page of the plugin where u
 2. ![Add New Video](https://videograph.ai/wp-content/uploads/2024/03/add-new-video-screenshot.png)
 Add New Video: This screenshot demonstrates the interface for adding a new video to the WordPress site using the plugin. Users can input video URLs and other details to upload videos seamlessly.
 
-3. ![Library Page](https://videograph.ai/wp-content/uploads/2024/03/library-page-screenshot.png)
+3. ![Upload New Video](https://videograph.ai/wp-content/uploads/2024/03/upload-new-video-screenshot.png)
+Upload New Video: This screenshot demonstrates the interface for uploading a new video to the WordPress site using the plugin.
+
+4. ![Library Page](https://videograph.ai/wp-content/uploads/2024/03/library-page-screenshot.png)
 Library Page: This screenshot illustrates the library page of the plugin where users can manage their video library, including viewing, editing, and deleting videos. It provides an organized overview of all videos available on the site.
 
-4. ![Create Live Stream](https://videograph.ai/wp-content/uploads/2024/03/create-live-stream-screenshot.png)
+5. ![Create Live Stream](https://videograph.ai/wp-content/uploads/2024/03/create-live-stream-screenshot.png)
 Create Live Stream: This screenshot displays the interface for creating a live stream directly from the WordPress dashboard using the plugin. Users can specify stream settings and initiate live streaming effortlessly.
 
-5. ![Live Streams Page](https://videograph.ai/wp-content/uploads/2024/03/live-streams-page-screenshot.png)
+6. ![Live Streams Page](https://videograph.ai/wp-content/uploads/2024/03/live-streams-page-screenshot.png)
 Live Streams Page: This screenshot presents the live streams page of the plugin where users can monitor and manage their ongoing live streams. It provides real-time information and controls for monitoring stream health and viewer engagement.
 
-6. ![Live Recordings Page](https://videograph.ai/wp-content/uploads/2024/03/live-recordings-page-screenshot.png)
+7. ![Live Recordings Page](https://videograph.ai/wp-content/uploads/2024/03/live-recordings-page-screenshot.png)
 Live Recordings Page: This screenshot showcases the live recordings page of the plugin where users can access recordings of past live streams. It offers playback options and additional details about each recording for reference and analysis.
 
 == Changelog ==
