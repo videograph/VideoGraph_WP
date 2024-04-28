@@ -4,10 +4,10 @@ Donate link: https://videograph.ai/
 Tags: videos, integration, videograph, videograph.ai
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 6.0
+Stable tag: 1.0
 Requires PHP: 7.0
 License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License URI: https://raw.githubusercontent.com/videograph/VideoGrpah_WP/master/LICENSE.txt
 
 Videograph provides plug-and-play APIs for Live streaming and on-demand video playback. Don't worry about setting up complex video infrastructure to publish live streaming and on-demand videos with Videograph you can instantly publish your video content.
 
