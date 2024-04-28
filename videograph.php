@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: videograph
- * Plugin URI: https://github.com/yourusername/videograph-wordpress-plugin
+ * Plugin URI: https://github.com/videograph/VideoGrpah_WP
  * Description: <a target="_blank" href="https://videograph.ai">videograph.ai</a> provides video infrastructure for product builders. Use <a target="_blank" href="https://videograph.ai">videograph.ai</a> for integrating, scaling, and managing on-demand & low latency live streaming features in your WordPress site.
  * Version: 1.0
  * Author: videograph.ai
