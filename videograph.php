@@ -1,10 +1,10 @@
 <?php
 /*
  * Plugin Name: videograph
- * Plugin URI: https://videograph.ai/
- * Description: Accessing videos from videograph.ai
+ * Plugin URI: https://github.com/yourusername/videograph-wordpress-plugin
+ * Description: <a target="_blank" href="https://videograph.ai">videograph.ai</a> provides video infrastructure for product builders. Use <a target="_blank" href="https://videograph.ai">videograph.ai</a> for integrating, scaling, and managing on-demand & low latency live streaming features in your WordPress site.
  * Version: 1.0
- * Author: videograph
+ * Author: videograph.ai
  * Author URI: https://videograph.ai/
  * 
  * 
@@ -13,6 +13,8 @@
  * Text Domain: videograph
  * Domain Path: where to find the translation files (see How to Internationalize Your Plugin)
  */
+
+ 
 // Define constants
 define('VIDEOGRAPH_DIR', plugin_dir_path(__FILE__));
 define('VIDEOGRAPH_URL', plugin_dir_url(__FILE__));
