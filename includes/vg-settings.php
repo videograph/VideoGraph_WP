@@ -1,6 +1,5 @@
 <?php
 
-// Settings page
 function vg_settings()
 {
     // Save settings or reset settings
@@ -69,7 +68,7 @@ function vg_settings()
         <div class="livestrea-wrap">
             <div class="settings-form">
                 <form method="post" action="">
-                    <?php echo esc_html($nonce_field); ?>
+                    <?php echo $nonce_field; ?>
                     <table class="form-table" role="presentation">
                         <tbody>
                             <tr>
@@ -158,29 +157,4 @@ function vg_settings()
     </script>
 
 <?php
-}
-function vg_validate_api_keys($access_token, $secret_key) {
-    // API URL for checking API keys
-    $api_url = 'https://api.videograph.ai/video/services/api/v1/contents';
-
-    // Headers for the API request
-    $headers = array(
-        'Authorization' => 'Basic ' . base64_encode($access_token . ':' . $secret_key),
-        'Content-Type' => 'application/json',
-    );
-
-    // Perform API request to check the validity of API keys
-    $response = wp_remote_get($api_url, array('headers' => $headers));
-
-    if (is_wp_error($response)) {
-        return 'Failed to fetch videos from Videograph AI API.';
-    }
-
-    $response_code = wp_remote_retrieve_response_code($response);
-
-    if ($response_code === 200) {
-        return 'success';
-    } else {
-        return 'Failed to fetch videos from Videograph AI API. Check your API Credentials.';
-    }
 }

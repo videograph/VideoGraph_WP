@@ -43,7 +43,7 @@ function vg_add_new_video()
     ?>
     <div class="wrap">
         <h1 class="wp-heading-inline">Add New Video</h1>
-        <a href="<?php echo esc_url(admin_url('admin.php?page=vg-add-new-video')); ?>" class="page-title-action">Upload Video</a>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=vg-upload-new-video')); ?>" class="page-title-action">Upload Video</a>
         <hr class="wp-header-end">
         <div class="vg-add-video-wrap">
             <div class="vg-add-video-form">
