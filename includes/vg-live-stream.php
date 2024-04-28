@@ -1,29 +1,30 @@
 <?php
 
 // Live Stream page
-function videograph_ai_live_stream_page()
+function vg_live_stream()
 {
     // Check if API keys are inserted
-    $access_token = get_option('videograph_ai_access_token');
-    $secret_key = get_option('videograph_ai_secret_key');
+    $access_token = get_option('vg_access_token');
+    $secret_key = get_option('vg_secret_key');
 
     if (empty($access_token) || empty($secret_key)) {
-        echo '<div class="vi-notice-error"><p>The API key is missing or invalid. Please go to the <a href="' . admin_url('admin.php?page=videograph-ai-settings') . '">settings</a> page and update it with the correct one.</p></div>';
+        echo '<div class="vi-notice-error"><p>The API key is missing or invalid. Please go to the <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">settings</a> page and update it with the correct one.</p></div>';
         return;
     }
 
     // Check if form is submitted
     if (isset($_POST['start_live_stream'])) {
+        if (isset($_POST['start_live_stream_nonce_field']) && wp_verify_nonce(wp_unslash(sanitize_text_field($_POST['start_live_stream_nonce_field'])), 'start_live_stream_nonce')) {
         // Create Live Stream
         $title = sanitize_text_field($_POST['live_stream_title']);
         $description = "desc";
         $region = sanitize_text_field($_POST['live_stream_region']);
         $record = isset($_POST['live_stream_record']) ? true : false;
-        $dvrDurationInMins = 0; // Assuming DVR duration is set to 0
-        $tags = ['string']; // Assuming a single tag
-        $metadata = [['key' => 'string', 'value' => 'string']]; // Assuming a single metadata item
-        $playback_policy = ['public']; // Assuming playback policy is set to public
-        $recordings_playback_policy = ['public']; // Assuming recordings playback policy is set to public
+        $dvrDurationInMins = 0;
+        $tags = ['string'];
+        $metadata = [['key' => 'string', 'value' => 'string']];
+        $playback_policy = ['public'];
+        $recordings_playback_policy = ['public'];
 
         // Send POST request to create live stream
         $api_url = 'https://api.videograph.ai/video/services/api/v1/livestreams';
@@ -31,7 +32,7 @@ function videograph_ai_live_stream_page()
             'Authorization' => 'Basic ' . base64_encode($access_token . ':' . $secret_key),
             'Content-Type' => 'application/json',
         );
-        $body = json_encode(array(
+        $body = wp_json_encode(array(
             'title' => $title,
             'description' => $description,
             'region' => $region,
@@ -46,7 +47,7 @@ function videograph_ai_live_stream_page()
         $response = wp_remote_post($api_url, array('headers' => $headers, 'body' => $body));
 
         if (is_wp_error($response)) {
-            echo '<div class="notice notice-error"><p>Failed to create live stream. Error: ' . $response->get_error_message() . '</p></div>';
+            echo '<div class="notice notice-error"><p>Failed to create live stream. Error: ' . esc_html($response->get_error_message()) . '</p></div>';
         } else {
             $response_code = wp_remote_retrieve_response_code($response);
             $response_message = wp_remote_retrieve_response_message($response);
@@ -61,15 +62,20 @@ function videograph_ai_live_stream_page()
 
                 echo '</div>';
             } else {
-                echo '<div class="notice notice-error"><p>Failed to create live stream. Check your API Credentials in <a href="' . admin_url('admin.php?page=videograph-ai-settings') . '">Settings</a> Page</p></div>';
+                echo '<div class="notice notice-error"><p>Failed to create live stream. Check your API Credentials in <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">Settings</a> Page</p></div>';
             }
         }
+    }
+    else {
+        // Nonce verification failed
+        wp_die('Error: Nonce verification failed. Form submission is not valid.');
+    }
     }
 
     // Display live stream form
     ?>
     <div class="wrap">
-        <!-- <h1 class="wp-heading-inline">Create a Live Stream</h1> -->
+        <hr class="wp-header-end">
         <div class="livestream-wrap">
             <div class="live_stream_form">
                 <h2>Create a Live Stream</h2>
@@ -77,17 +83,19 @@ function videograph_ai_live_stream_page()
                     <div class="loader"></div>
                 </div>
                 <form method="post" id="live-stream-form">
+                <input type="hidden" name="action" value="start_live_stream_action">
+                <?php wp_nonce_field('start_live_stream_nonce', 'start_live_stream_nonce_field'); ?>
                     <div class="form-field">
                         <label for="live-stream-title">Title:</label>
-                        <input type="text" id="live-stream-title" name="live_stream_title" required placeholder="Enter live stream title here">
+                        <input type="text" id="live-stream-title" name="live_stream_title" required placeholder="Enter live stream title here" oninput="validateTitle(this)">
+                        <div id="vg-title-error" style="color: red;"></div>
                     </div>
 
                     <div class="form-field">
                         <label for="live-stream-region">Region:</label>
                         <select id="live-stream-region" name="live_stream_region">
                             <option value="ap-south-1">AP South 1</option>
-                            <option value="us-east-1">US East 1</option>
-                            <!-- Add more options for different regions if needed -->
+                            <option value="us-west-1">US West 1</option>
                         </select>
                     </div>
                     <div class="form-field record">
@@ -103,6 +111,28 @@ function videograph_ai_live_stream_page()
 
 
 <script>
+
+    function validateTitle(input) {
+        // Trim consecutive spaces
+        const title = input.value.replace(/\s\s+/g, ' ');
+        input.value = title;
+
+        const errorDiv = document.getElementById('vg-title-error');
+        const symbols = /[!@#$%^&*()_+{}\[\]:;<>,.?~\\|-]/;
+
+        if (title.length > 50) {
+            input.value = title.substring(0, 50); // Truncate to 50 characters
+            errorDiv.textContent = 'Title should not exceed 50 characters.';
+            input.setCustomValidity('');
+        } else if (/^\s/.test(title)) {
+            // Block space at the beginning
+            input.value = title.trim();
+            input.setCustomValidity('');
+        } else {
+            errorDiv.textContent = '';
+            input.setCustomValidity('');
+        }
+    }
   document.addEventListener('DOMContentLoaded', function() {
     const titleField = document.getElementById('live-stream-title');
     const regionField = document.getElementById('live-stream-region');
