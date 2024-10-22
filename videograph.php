@@ -6,141 +6,145 @@
  * Version: 1.0
  * Author: videograph.ai
  * Author URI: https://videograph.ai/
- * 
- * 
- * License: MIT
+ * License: GPL-2.0-or-later
  * License URI: https://opensource.org/licenses/MIT
  * Text Domain: videograph
- * Domain Path: where to find the translation files (see How to Internationalize Your Plugin)
+ * Domain Path: /languages
  */
 
- 
+// Ensure this file is not accessed directly
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
 // Define constants
-define('VIDEOGRAPH_DIR', plugin_dir_path(__FILE__));
-define('VIDEOGRAPH_URL', plugin_dir_url(__FILE__));
+define( 'VIDEOGRAPH_DIR', plugin_dir_path( __FILE__ ) );
+define( 'VIDEOGRAPH_URL', plugin_dir_url( __FILE__ ) );
+define( 'VIDEOGRAPH_PLUGIN_PREFIX', 'videograph' );
+
+// Load plugin text domain for translations
+function videograph_load_textdomain() {
+    load_plugin_textdomain( 'videograph', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+}
+add_action( 'plugins_loaded', 'videograph_load_textdomain' );
 
 // Include necessary files
-require_once(VIDEOGRAPH_DIR . 'includes/vg-library.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-add-new-video.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-settings.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-live-stream.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-live-stream-videos.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-live-recording-videos.php');
-require_once(VIDEOGRAPH_DIR . 'includes/vg-upload-new-video.php');
+require_once( VIDEOGRAPH_DIR . 'includes/vg-library.php' );
+require_once( VIDEOGRAPH_DIR . 'includes/vg-add-new-video.php' );
+require_once( VIDEOGRAPH_DIR . 'includes/vg-settings.php' );
+require_once( VIDEOGRAPH_DIR . 'includes/vg-live-stream.php' );
+require_once( VIDEOGRAPH_DIR . 'includes/vg-live-stream-videos.php' );
+require_once( VIDEOGRAPH_DIR . 'includes/vg-live-recording-videos.php' );
 
-
-register_activation_hook(__FILE__, 'vg_set_default_options');
-
-function vg_set_default_options()
-{
-    if (false === get_option('vg_access_token')) {
-        add_option('vg_access_token', '');
+// Set default options on plugin activation
+register_activation_hook( __FILE__, 'videograph_set_default_options' );
+function videograph_set_default_options() {
+    if ( false === get_option( 'videograph_access_token' ) ) {
+        add_option( 'videograph_access_token', '' );
     }
-    if (false === get_option('vg_secret_key')) {
-        add_option('vg_secret_key', '');
+    if ( false === get_option( 'videograph_secret_key' ) ) {
+        add_option( 'videograph_secret_key', '' );
     }
 }
-// Add the plugin to the WordPress menu
-function videograph_menu()
-{
+
+// Register the plugin menu
+function videograph_add_menu() {
     add_menu_page(
-        'Videograph AI',
-        'Videograph AI',
+        __( 'Videograph AI', 'videograph' ),
+        __( 'Videograph AI', 'videograph' ),
         'manage_options',
-        'vg-library',
-        'vg_library',
-        plugin_dir_url(__FILE__) . 'assets/wp-vg-icon-new.svg',
+        'videograph-video-library',
+        'videograph_video_library',
+        plugin_dir_url( __FILE__ ) . 'assets/wp-vg-icon-new.svg',
         25
     );
 
     add_submenu_page(
-        'vg-library',
-        'Videos',
-        'Videos',
+        'videograph-video-library',
+        __( 'Videos', 'videograph' ),
+        __( 'Videos', 'videograph' ),
         'manage_options',
-        'vg-library',
-        'vg_library',
+        'videograph-video-library',
+        'videograph_video_library'
     );
 
     add_submenu_page(
-        'vg-library',
-        'Add New Video',
-        'Add New Video',
+        'videograph-video-library',
+        __( 'Add New Video', 'videograph' ),
+        __( 'Add New Video', 'videograph' ),
         'manage_options',
-        'vg-add-new-video',
-        'vg_add_new_video'
+        'videograph-add-new-video',
+        'videograph_add_new_video'
     );
 
     add_submenu_page(
-        'vg-library',
-        'Upload New Video',
-        'Upload New Video',
+        'videograph-video-library',
+        __( 'Create Live Stream', 'videograph' ),
+        __( 'Create Live Stream', 'videograph' ),
         'manage_options',
-        'vg-upload-new-video',
-        'vg_upload_new_video'
+        'videograph-create-livestream',
+        'videograph_create_livestream'
     );
 
     add_submenu_page(
-        'vg-library',
-        'Create Live Stream',
-        'Create Live Stream',
+        'videograph-video-library',
+        __( 'Live Stream', 'videograph' ),
+        __( 'Live Stream', 'videograph' ),
         'manage_options',
-        'vg-live-stream',
-        'vg_live_stream'
-    );
-    add_submenu_page(
-        'vg-library',
-        'Live Stream',
-        'Live Stream',
-        'manage_options',
-        'vg-live-stream-videos',
-        'vg_live_stream_videos'
+        'videograph-livestreams',
+        'videograph_livestreams'
     );
 
     add_submenu_page(
-        'vg-library',
-        'Live Recording',
-        'Live Recording',
+        'videograph-video-library',
+        __( 'Live Recording', 'videograph' ),
+        __( 'Live Recording', 'videograph' ),
         'manage_options',
-        'vg-live-recording-videos',
-        'vg_live_recording_videos'
+        'videograph-live-recordings',
+        'videograph_live_recordings'
     );
 
     add_submenu_page(
-        'vg-library',
-        'Settings',
-        'Settings',
+        'videograph-video-library',
+        __( 'Settings', 'videograph' ),
+        __( 'Settings', 'videograph' ),
         'manage_options',
-        'vg-settings',
-        'vg_settings'
+        'videograph-settings',
+        'videograph_settings'
     );
 }
+add_action( 'admin_menu', 'videograph_add_menu' );
 
-add_action('admin_menu', 'videograph_menu');
-add_action('admin_post_create_post_action', 'vg_add_new_video_callback');
-add_action('admin_post_create_post_action', 'vg_upload_video_callback');
-add_action('admin_post_create_post_action', 'vg_library_pagination');
+// Handle form submissions
+add_action( 'admin_post_create_post_action', 'videograph_add_new_video_callback' );
+add_action( 'admin_post_create_post_action', 'videograph_library_pagination' );
 
-function vg_enqueue_scripts() {
-    // Enqueue CSS
-    wp_enqueue_style( 'vg-style', plugin_dir_url( __FILE__ ) . 'assets/css/vg-style.css', array(), '6.4.1' );
+// Enqueue styles and scripts for plugin pages only
+function videograph_enqueue_scripts( $hook ) {
+    if ( strpos( $hook, 'videograph' ) === false ) return;
 
-    // Enqueue JS
-    wp_enqueue_script( 'vg-scripts', plugin_dir_url( __FILE__ ) . 'assets/js/vg-scripts.js', array(), '1.0.1', true );
-    //wp_enqueue_script( 'jquery-script', 'https://code.jquery.com/jquery-3.6.0.min.js', array(), '3.6.0', true );
-    wp_enqueue_style( 'custom-svg-icon', plugin_dir_url( __FILE__ ) . 'assets/wp-vg-icon-new.svg', array(), '1.0' );
-
-    //wp_enqueue_script('videograph-progress', plugin_dir_url( __FILE__ ) . 'assets/js/progress.js', array('jquery'), '1.0', true);
+    wp_enqueue_style( VIDEOGRAPH_PLUGIN_PREFIX . '-style', plugin_dir_url( __FILE__ ) . 'assets/css/vg-style.css', [], '1.0.1' );
+    wp_enqueue_script( VIDEOGRAPH_PLUGIN_PREFIX . '-scripts', plugin_dir_url( __FILE__ ) . 'assets/js/vg-scripts.js', [ 'jquery' ], '1.0.1', true );
 }
-add_action( 'admin_enqueue_scripts', 'vg_enqueue_scripts' );
+add_action( 'admin_enqueue_scripts', 'videograph_enqueue_scripts' );
 
-function vg_enqueue_jquery_ui() {
-    wp_enqueue_script('jquery-ui-sortable');
+// Enqueue scripts for the live stream page
+function videograph_enqueue_live_stream_scripts( $hook ) {
+    if ( $hook === 'videograph-video-library_page_videograph-create-livestream' ) {
+        wp_enqueue_script(
+            VIDEOGRAPH_PLUGIN_PREFIX . '-livestream-js',
+            plugin_dir_url( __FILE__ ) . 'assets/js/create-livestream.js',
+            [ 'jquery' ],
+            '1.0',
+            true
+        );
+    }
 }
-add_action('admin_enqueue_scripts', 'vg_enqueue_jquery_ui');
+add_action( 'admin_enqueue_scripts', 'videograph_enqueue_live_stream_scripts' );
 
-function enqueue_custom_scripts() {
-    wp_enqueue_script('custom-upload-script', plugin_dir_url(__FILE__) . 'assets/js/custom-upload.js', array('jquery'), '1.0', true);
+function videograph_enqueue_frontend_styles() {
+    if (!is_admin()) {
+        wp_enqueue_style('videograph-global-styles', plugin_dir_url(__FILE__) . 'assets/css/vg-global-style.css', [], '1.0.1');
+    }
 }
-add_action('wp_enqueue_scripts', 'vg_enqueue_custom_scripts');
-
+add_action('wp_enqueue_scripts', 'videograph_enqueue_frontend_styles');

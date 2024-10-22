@@ -1,28 +1,28 @@
 <?php
-
-function vg_livestream_shortcode($atts) {
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+function videograph_livestream_shortcode($atts) {
     $atts = shortcode_atts( array(
         'stream_id' => '',
     ), $atts, 'videograph-livestream' );
-
     if (empty($atts['stream_id'])) {
-        return '<p>Error: Livestream ID is missing.</p>';
+        return '<p>' . esc_html__( 'Error: Livestream ID is missing.', 'videograph' ) . '</p>';
     }
-
     $streamId = sanitize_text_field($atts['stream_id']);
-
-    return '<div class="video-iframe"><iframe width="100%" height="100%" src="https://dashboard.videograph.ai/videos/embed?streamId=' . $streamId . '" frameborder="0" allowfullscreen></iframe> </div>';
+    $iframe_url = esc_url( "https://dashboard.videograph.ai/videos/embed?streamId={$streamId}" );
+    return '<div class="video-iframe"><iframe width="100%" height="100%" src="' . $iframe_url . '" frameborder="0" allowfullscreen></iframe></div>';
 }
-add_shortcode('videograph-livestream', 'vg_livestream_shortcode');
+add_shortcode('videograph-livestream', 'videograph_livestream_shortcode');
 
 
-function vg_live_stream_videos()
+function videograph_livestreams()
 {
     // Check if API keys are inserted
-    $access_token = get_option('vg_access_token');
-    $secret_key = get_option('vg_secret_key');
+    $access_token = get_option('videograph_access_token');
+    $secret_key = get_option('videograph_secret_key');
     if (empty($access_token) || empty($secret_key)) {
-        echo '<div class="vi-notice-error"><p>The API key is missing or invalid. Please go to the <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">settings</a> page and update it with the correct one.</p></div>';
+        echo '<div class="vi-notice-error"><p>The API key is missing or invalid. Please go to the <a href="' . esc_url(admin_url('admin.php?page=videograph-settings')) . '">settings</a> page and update it with the correct one.</p></div>';
         return;
     }
     // Fetch Livestream videos
@@ -40,22 +40,35 @@ function vg_live_stream_videos()
             // $response_data = json_decode($response, true);
             if ($response_data['status'] === 'Success') {
                 $livestreams = $response_data['data'];
-                $search_query = isset($_GET['s']) ? sanitize_text_field($_GET['s']) : '';
+                
+                    if (isset($_GET['vg_videos_per_page_nonce_field'])) {
+                        if (wp_verify_nonce(sanitize_text_field(wp_unslash($_GET['vg_videos_per_page_nonce_field'])), 'vg_videos_per_page_nonce')) {
+                            $videograph_search_query = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+                        } else {
+                            $videograph_search_query = '';
+                            echo '<div class="notice notice-error"><p>' . esc_html__('Security check failed. Please try again.', 'videograph') . '</p></div>';
+                        }
+                    } else {
+                        // No form submission (first page load or no nonce sent), set default search query
+                        $videograph_search_query = isset($_GET['s']) ? sanitize_text_field(wp_unslash($_GET['s'])) : '';
+                    }
+
+
                 // Custom filtering function based on the search query
-                function custom_video_filter($content, $search_query) {
-                    return strpos($livestream['streamUUID'], $search_query) !== false || strpos($livestream['title'], $search_query) !== false;
+                function videograph_custom_video_filter($content, $videograph_search_query) {
+                    return strpos($livestream['streamUUID'], $videograph_search_query) !== false || strpos($livestream['title'], $videograph_search_query) !== false;
                 }
                 // Filter videos based on the search query
-                if (!empty($search_query)) {
-                    $filtered_videos = array_filter($livestreams, function ($content) use ($search_query) {
-                        return custom_video_filter($content, $search_query);
+                if (!empty($videograph_search_query)) {
+                    $filtered_videos = array_filter($livestreams, function ($content) use ($videograph_search_query) {
+                        return videograph_custom_video_filter($content, $videograph_search_query);
                     });
                 } else {
                     $filtered_videos = $livestreams;
                 }
                 // If search query provided and no matching videos found
-                if (!empty($search_query) && empty($filtered_videos)) {
-                    echo '<div class="notice notice-warning"><p>No Livestream(s) found matching the search query: ' . esc_html($search_query) . '</p></div>';
+                if (!empty($videograph_search_query) && empty($filtered_videos)) {
+                    echo '<div class="notice notice-warning"><p>No Livestream(s) found matching the search query: ' . esc_html($videograph_search_query) . '</p></div>';
                 }
                 $per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10; // Number of videos per page
                 $total_videos = count($livestreams);
@@ -67,26 +80,26 @@ function vg_live_stream_videos()
             ?>
 
 
-    <div class="wrap">
-        <h1 class="wp-heading-inline">Live Stream</h1>
-        <a href="<?php echo esc_url(admin_url('admin.php?page=vg-live-stream')) ?>" class="page-title-action">Create Live Stream</a>
+    <div class="wrap vg-wrap">
+        <h1 class="wp-heading-inline"><?php esc_html_e('Live Stream', 'videograph'); ?></h1>
+        <a href="<?php echo esc_url(admin_url('admin.php?page=videograph-create-livestream')) ?>" class="page-title-action">Create Live Stream</a>
         <hr class="wp-header-end"><br>
 
         <div class="wp-filter">
             <div class="search-form">
                 <label for="media-search-input" class="media-search-input-label">Search</label>
-                <input type="search" id="media-search-input" class="search" name="s" value="<?php echo esc_attr($search_query); ?>" />
+                <input type="search" id="media-search-input" class="search" name="s" value="<?php echo esc_attr($videograph_search_query); ?>" />
             </div>
 
             <form id="videos-per-page-form" method="GET" action="">
-                <input type="hidden" name="page" value="vg-live-stream-videos">
+                <input type="hidden" name="page" value="videograph-livestreams">
                 <?php wp_nonce_field('vg_videos_per_page_nonce', 'vg_videos_per_page_nonce_field'); ?>
                 <div class="videos-count">
-                    <label for="videos-per-page">Items per page</label>
+                    <label for="videos-per-page"><?php esc_html_e('Items per page', 'videograph'); ?></label>
                     <select id="videos-per-page" name="per_page">
-                        <option value="10" <?php selected($per_page, 10); ?> selected>10</option>
-                        <option value="20" <?php selected($per_page, 20); ?>>20</option>
-                        <option value="30" <?php selected($per_page, 30); ?>>30</option>
+                        <option value="10" <?php selected($per_page, 10); ?>><?php esc_html_e('10', 'videograph'); ?></option>
+                        <option value="20" <?php selected($per_page, 20); ?>><?php esc_html_e('20', 'videograph'); ?></option>
+                        <option value="30" <?php selected($per_page, 30); ?>><?php esc_html_e('30', 'videograph'); ?></option>
                     </select>
                 </div>
             </form>
@@ -98,12 +111,12 @@ function vg_live_stream_videos()
                     <table class="wp-list-table widefat fixed striped table-view-list posts">
                         <thead>
                             <tr>
-                                <th scope="col">Created at</th>
-                                <th scope="col">Title</th>
-                                <th scope="col">Video ID</th>
-                                <th scope="col">Thumbnail</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Actions</th>
+                                <th scope="col"><?php esc_html_e('Created at', 'videograph'); ?></th>
+                                <th scope="col"><?php esc_html_e('Title', 'videograph'); ?></th>
+                                <th scope="col"><?php esc_html_e('Video ID', 'videograph'); ?></th>
+                                <th scope="col"><?php esc_html_e('Thumbnail', 'videograph'); ?></th>
+                                <th scope="col"><?php esc_html_e('Status', 'videograph'); ?></th>
+                                <th scope="col"><?php esc_html_e('Actions', 'videograph'); ?></th>
                             </tr>
                         </thead>
                         <tbody id="the-list">
@@ -148,12 +161,12 @@ function vg_live_stream_videos()
                                                 <ul>
                                                     <li>
                                                         <a href="#" class="view-details-link" data-stream-id="<?php echo esc_attr($streamId); ?>">
-                                                            <span class="dashicons dashicons-info"></span>Stream Details
+                                                            <span class="dashicons dashicons-info"></span><?php esc_html_e('Stream Details', 'videograph'); ?>
                                                         </a>
                                                     </li>
                                                     <li>
                                                         <a href="#" class="video-delete" data-stream-id="<?php echo esc_attr($streamId); ?>">
-                                                            <span class="dashicons dashicons-trash"></span>Delete Stream
+                                                            <span class="dashicons dashicons-trash"></span><?php esc_html_e('Delete Stream', 'videograph'); ?>
                                                         </a>
                                                     </li>
                                                 </ul>
@@ -165,25 +178,25 @@ function vg_live_stream_videos()
                         </tbody>
                     </table>
 
-                    <div id="no-results-message" style="display: none;">No search results found</div>
+                    <div id="no-results-message" style="display: none;"><?php esc_html_e('No search results found', 'videograph'); ?></div>
                 </div>
             </div>
                     <?php
             } else {
         ?>
                         <div class="notice notice-error">
-                            <p>No Live Stream(s) found. You can Create Live Stream <a href="<?php echo esc_url(admin_url('admin.php?page=vg-live-stream')); ?>">here</a></p>
+                            <p>No Live Stream(s) found. You can Create Live Stream <a href="<?php echo esc_url(admin_url('admin.php?page=videograph-create-livestream')); ?>">here</a></p>
                         </div>
                     <?php
             }
         ?>
 
-            <div class="popup-content">
+            <div class="vg-popup-content">
                 <div class="popup-overlay"></div>
                 <div class="popup-main">
                     <div class="livestream-popup-cnt">
                         <div class="video-popup-header">
-                            <h2>Live Stream Details</h2>
+                            <h2><?php esc_html_e('Live Stream Details', 'videograph'); ?></h2>
                             <button class="close-button"><span class="dashicons dashicons-no"></span></button>
                         </div>
                         <div class="livestream-popup-main" id="liveStreamDetailsPopup">
@@ -194,7 +207,7 @@ function vg_live_stream_videos()
             </div>
 
             <script>
-                function fetchLiveStreamDetails(streamId) {
+                function videograph_fetch_livestream_details(streamId) {
                     // Make API call to fetch livestream details
                     var apiUrl = 'https://api.videograph.ai/video/services/api/v1/livestreams/' + streamId;
                     var headers = {
@@ -273,17 +286,17 @@ function vg_live_stream_videos()
                                     <p>
                                         <strong>RTMP URL: </strong>
                                         <input type="text" value="${ingestUrl}" readonly />
-                                        <button onclick="copyText(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
+                                        <button onclick="videograph_copytext(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
                                     </p>
                                     <p>
                                         <strong>Stream Key: </strong>
                                         <input type="text" value="${streamKey}" readonly />
-                                        <button onclick="copyText(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
+                                        <button onclick="videograph_copytext(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
                                     </p>
                                     <p>
                                         <strong>Short Code: </strong>
                                         <input type="text" value="[videograph-livestream stream_id='${streamUUID}']" readonly />
-                                        <button onclick="copyText(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
+                                        <button onclick="videograph_copytext(this.previousElementSibling, this)"><span class="dashicons dashicons-admin-page"></span></button>
                                     </p>
                                 </div>
                                 <div class="livestream-details-bottom">
@@ -296,14 +309,14 @@ function vg_live_stream_videos()
 
                         document.getElementById('liveStreamDetailsPopup').innerHTML = popupContent;
                         document.querySelector('.popup-overlay').style.display = 'block';
-                        document.querySelector('.popup-content').style.display = 'block';
+                        document.querySelector('.vg-popup-content').style.display = 'block';
 
-                        var deleteVideoLink = document.querySelector('.popup-content .video-delete');
+                        var deleteVideoLink = document.querySelector('.vg-popup-content .video-delete');
                         if (deleteVideoLink) {
                             deleteVideoLink.addEventListener('click', function (event) {
                                 event.preventDefault();
                                 var streamId = this.getAttribute('data-stream-id');
-                                deleteVideo(streamId);
+                                videograph_delete_video(streamId);
                             });
                         }
                     })
@@ -312,7 +325,7 @@ function vg_live_stream_videos()
                     });
                 }
 
-                function deleteVideo(streamId) {
+                function videograph_delete_video(streamId) {
                     if (confirm("Are you sure you want to delete this video?")) {
                         var apiUrl = 'https://api.videograph.ai/video/services/api/v1/livestreams/' + streamId;
                         var headers = {
@@ -349,19 +362,19 @@ function vg_live_stream_videos()
                         link.addEventListener('click', function (event) {
                             event.preventDefault();
                             var streamId = this.getAttribute('data-stream-id');
-                            fetchLiveStreamDetails(streamId);
+                            videograph_fetch_livestream_details(streamId);
                             body.style.overflow = 'hidden';
                         });
                     });
 
                     var popupOverlay = document.querySelector('.popup-overlay');
-                    var popupContent = document.querySelector('.popup-content');
+                    var popupContent = document.querySelector('.vg-popup-content');
 
                     var closeButtons = document.querySelectorAll('.close-button, .popup-overlay');
                     closeButtons.forEach(function(button) {
                         button.addEventListener('click', function(e) {
                             e.preventDefault();
-                            var videoPopup = this.closest('.popup-content');
+                            var videoPopup = this.closest('.vg-popup-content');
                             if (videoPopup) {
                                 var iframe = videoPopup.querySelector('iframe');
                                 if (iframe) {
@@ -381,7 +394,7 @@ function vg_live_stream_videos()
                         link.addEventListener('click', function (event) {
                             event.preventDefault();
                             var streamId = this.getAttribute('data-stream-id');
-                            deleteVideo(streamId);
+                            videograph_delete_video(streamId);
                         });
                     });
                 });
@@ -392,20 +405,20 @@ function vg_live_stream_videos()
         <div class="wrap">
             <?php
                 if ($total_pages >= 1) {
-                    echo '<div class="pagination">';
+                    echo '<div class="vg-pagination">';
                     echo '<span class="displaying-num">' . esc_html($total_videos) . ' items </span>';
                     // Get the current videos per page setting
                     $per_page = isset($_GET['per_page']) ? intval($_GET['per_page']) : 10;
                     // Add a "First Page" button
                     if ($current_page > 1) {
-                        $first_url = add_query_arg(array('paged' => 1, 'per_page' => $per_page), admin_url('admin.php?page=vg-live-stream-videos'));
+                        $first_url = add_query_arg(array('paged' => 1, 'per_page' => $per_page), admin_url('admin.php?page=videograph-livestreams'));
                         echo '<a href="' . esc_url($first_url) . '" class="first-page button">« First</a>';
                     } else {
                         echo '<a class="first-page button" disabled>« First</a>';
                     }
                     if ($current_page > 1) {
                         $prev_page = $current_page - 1;
-                        $prev_url = add_query_arg(array('paged' => $prev_page, 'per_page' => $per_page), admin_url('admin.php?page=vg-live-stream-videos'));
+                        $prev_url = add_query_arg(array('paged' => $prev_page, 'per_page' => $per_page), admin_url('admin.php?page=videograph-livestreams'));
                         echo '<a href="' . esc_url($prev_url) . '" class="prev-page button">‹</a>';
                     } else {
                         echo '<a class="prev-page button" disabled>‹</a>';
@@ -414,14 +427,14 @@ function vg_live_stream_videos()
                     echo '<span class="current-page">' . esc_html($current_page) . ' of ' . esc_html($total_pages) . '</span>';
                     if ($current_page < $total_pages) {
                         $next_page = $current_page + 1;
-                        $next_url = add_query_arg(array('paged' => $next_page, 'per_page' => $per_page), admin_url('admin.php?page=vg-live-stream-videos'));
+                        $next_url = add_query_arg(array('paged' => $next_page, 'per_page' => $per_page), admin_url('admin.php?page=videograph-livestreams'));
                         echo '<a href="' . esc_url($next_url) . '" class="next-page button">›</a>';
                     } else {
                         echo '<a class="next-page button" disabled>›</a>';
                     }
                     // Add a "Last Page" button
                     if ($current_page < $total_pages) {
-                        $last_url = add_query_arg(array('paged' => $total_pages, 'per_page' => $per_page), admin_url('admin.php?page=vg-live-stream-videos'));
+                        $last_url = add_query_arg(array('paged' => $total_pages, 'per_page' => $per_page), admin_url('admin.php?page=videograph-livestreams'));
                         echo '<a href="' . esc_url($last_url) . '" class="last-page button">Last »</a>';
                     } else {
                         echo '<a class="last-page button" disabled>Last »</a>';
@@ -437,10 +450,10 @@ function vg_live_stream_videos()
                 // Function to search and reload videos
                 jQuery(document).ready(function ($) {
                     // Function to filter table rows based on search input
-                    function filterTableRows(searchQuery) {
+                    function videograph_filter_table_rows(videograph_search_query) {
                         const $tableRows = $('#the-list tr');
                         const $noResultsMessage = $('#no-results-message'); // Added message element
-                        const $noPagination = $('.pagination');
+                        const $noPagination = $('.vg-pagination');
 
                         let foundMatch = false;
 
@@ -449,8 +462,8 @@ function vg_live_stream_videos()
                             const title = $(this).find('td:nth-child(2)').text();
 
                             if (
-                                contentId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                title.toLowerCase().includes(searchQuery.toLowerCase())
+                                contentId.toLowerCase().includes(videograph_search_query.toLowerCase()) ||
+                                title.toLowerCase().includes(videograph_search_query.toLowerCase())
                             ) {
                                 $(this).show();
                                 foundMatch = true;
@@ -463,7 +476,7 @@ function vg_live_stream_videos()
                         if (foundMatch) {
                             $noResultsMessage.hide();
                             $noPagination.hide();
-                            if(searchQuery.trim() === ''){
+                            if(videograph_search_query.trim() === ''){
                                 $noPagination.show();
                             }
                         } else {
@@ -474,8 +487,8 @@ function vg_live_stream_videos()
 
                     // Event listener for search input changes
                     $('#media-search-input').on('input', function () {
-                        const searchQuery = $(this).val();
-                        filterTableRows(searchQuery);
+                        const videograph_search_query = $(this).val();
+                        videograph_filter_table_rows(videograph_search_query);
                     });
                 });
 
@@ -485,10 +498,9 @@ function vg_live_stream_videos()
                 });
 
                 // Initialize the "Videos per page" dropdown with the current value
-                const currentVideosPerPage = <?php echo esc_html($per_page); ?>;
-                document.getElementById('videos-per-page').value = currentVideosPerPage;
+                
 
-                function copyText(inputElement, copyButton) {
+                function videograph_copytext(inputElement, copyButton) {
                             inputElement.select();
                             inputElement.setSelectionRange(0, 99999); // For mobile devices
 
@@ -520,7 +532,7 @@ function vg_live_stream_videos()
                         
                         const selectedPerPage = perPageSelect.value;
                         
-                        const newUrl_live = "<?php echo esc_url(admin_url('admin.php?page=vg-live-stream-videos')); ?>" +
+                        const newUrl_live = "<?php echo esc_url(admin_url('admin.php?page=videograph-livestreams')); ?>" +
                             "&per_page=" + selectedPerPage;
                         
                         window.location.href = newUrl_live;
@@ -533,7 +545,7 @@ function vg_live_stream_videos()
             echo '<div class="notice notice-error"><p>' . esc_html($response_data['message']) . '</p></div>';
         }
     } else {
-        echo '<div class="notice notice-error"><p>Failed to fetch live stream videos from Videograph AI API. Check your API Credentials in <a href="' . esc_url(admin_url('admin.php?page=vg-settings')) . '">Settings</a> Page</p></div';
+        echo '<div class="notice notice-error"><p>Failed to fetch live stream videos from Videograph AI API. Check your API Credentials in <a href="' . esc_url(admin_url('admin.php?page=videograph-settings')) . '">Settings</a> Page</p></div';
     }
 }
 }
